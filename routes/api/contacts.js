@@ -69,7 +69,7 @@ router.delete('/:contactId', async (req, res, next) => {
     if(!result) {
       throw HttpError(404, 'Not Found');
     }
-    
+
     res.json({ message: "contact deleted" }); // статус 200 повертається автоматично
   } catch(error) {
     next(error);
@@ -78,15 +78,28 @@ router.delete('/:contactId', async (req, res, next) => {
 
 
 
-router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
+// -----------------------put-запит (коригування контакту за id)----------------------------------------------
+
+router.put('/:contactId', async (req, res, next) => { 
+  try {
+    const { error } = addSchema.validate(req.body); 
+    
+    if(error) {
+      throw HttpError(400, error.message);
+    }
+
+    const { id } = req.params;
+    const result = await contacts.updateContact(id, req.body); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
+    
+    if(!result) {
+      throw HttpError(404, 'Not Found');
+    }
+
+    res.json(result);  // статус 200 повертається автоматично
+  } catch(error) {
+    next(error);
+  }
 })
 
-// Отримує параметр id
-// Отримує body в json-форматі c оновленням будь-яких полів name, email и phone
-// Якщо body немає, повертає json з ключем {"message": "missing fields"} і статусом 400
-// Якщо з body всі добре, викликає функцію updateContact(contactId, body). (Напиши її) для поновлення контакту в файлі contacts.json
-// За результатом роботи функції повертає оновлений об'єкт контакту і статусом 200. В іншому випадку, повертає json з ключем "message": "Not found" і статусом 404
-// продумайте перевірку (валідацію) отриманих даних
 
 export default router;
