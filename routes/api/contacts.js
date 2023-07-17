@@ -1,16 +1,16 @@
-import express from 'express';
+import express, { request } from 'express';
 import Joi from 'joi';  // бібліотека, що перевіряє тіло запиту
 import contacts from '../../models/contacts.js'; // імпорт усіх ф-цій для роботи з contacts.json
 import { HttpError } from '../../helpers/index.js';
 
 const router = express.Router(); // об'єкт, який описує окремі маршрути (створює 1 аркуш записної книжки)
 
-// Створюємо Joi-схему (вимоги до кожного поля)
+// Створюємо Joi-схему для post/put-запитів (вимоги до кожного поля)
 const addSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().required(),
   phone: Joi.string().required(),
-})
+}) // у addSchema є метод validate, в який передається тіло запиту (req.body) - перевірка щоб в post/put-запит не пішов неповний об'єкт
 
 
 // --------------------------Запит на усі контакти----------------------------------------------
@@ -42,34 +42,22 @@ router.get('/:contactId', async (req, res, next) => {
 })
 
 
-
-
-
-
+// -----------------------post-запит (додавання нового контакту)----------------------------------------------
 router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
+  try {
+    const { error } = addSchema.validate(req.body); //здійснюється перевірка полів об'єкту на відповідність addSchema - повертається об'єкт
+    
+    // одним з ключів цього об'єкту є error, значенням якого буде undefind, якщо валідація успішна
+    if(error) { // якщо валідація повернула помилку, то це буде об'єкт помилки з властивістю message (вказано у чому саме проблема)
+      throw HttpError(400, error.message); // наприклад, '"phone" is required'     //"missing required name field"
+    } 
+
+    const result = await contacts.addContact(req.body);
+    res.status(201).json(result); // успішно додали книгу на сервер
+  } catch(error) {
+    next(error);
+  }
 })
-
-// Отримує body в форматі {name, email, phone} (усі поля обов'язкові)
-// Якщо в body немає якихось обов'язкових полів, повертає json з ключем {"message": "missing required name field"} і статусом 400
-// Якщо з body все добре, додає унікальний ідентифікатор в об'єкт контакту
-// Викликає функцію addContact(body) для збереження контакту в файлі contacts.json
-// За результатом роботи функції повертає об'єкт з доданим id {id, name, email, phone} і статусом 201
-
-// // Повертає об'єкт доданого контакту
-// async function addContact({ name, email, phone }) { 
-//   const contacts = await listContacts(); //отримуємо масив контактів
-//   const newContact = {
-//       id: nanoid(),
-//       name,
-//       email,
-//       phone,
-//   }
-//   contacts.push(newContact); // додаємо новий фільм у масив
-//   await updateContactsStorage(contacts); //перезапис json
-//   return newContact; // повертаємо об'єкт доданого контакту
-// }
-// продумайте перевірку (валідацію) отриманих даних
 
 
 
