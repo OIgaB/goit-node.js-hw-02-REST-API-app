@@ -17,7 +17,7 @@ const addSchema = Joi.object({
 router.get('/', async (req, res, next) => {  
   try{
     const result = await contacts.listContacts(); // отримую усі контакти
-    res.json(result); // відправляю масив об'єктів на фронтенд
+    res.json(result); // відправляю масив об'єктів на фронтенд    // статус 200 повертається автоматично
   } catch(error) {
     next(error); // іди далі і шукай обробника помилок (ф-цію з 4-ма параметрами: err, req, res, next) - express знайде його в app.js (для статуса 500)
   }
@@ -28,14 +28,14 @@ router.get('/', async (req, res, next) => {
 router.get('/:contactId', async (req, res, next) => {
   try{
     const { id } = req.params; // в об'єкті params зберігаються усі динамічні частини маршруту {id: 'u9k...'}
-    const result = await contacts.getContactById(id); // отримали книгу або null   (return result || null;)
+    const result = await contacts.getContactById(id); // отримали контакт або null   (return result || null;)
     
     // якщо такого id не буде (повернулось null), то повернеться обєкт error, і нас перекине в catch
     if(!result) { 
       throw HttpError(404, "Not found"); // див. папку helpers. Щоб в маршрутах не дублювати код
     } 
 
-    res.json(result); // відправили обєкт з 1м контактом
+    res.json(result); // відправили обєкт з 1м контактом   // статус 200 повертається автоматично
   } catch(error){
     next(error);
   }
@@ -60,27 +60,23 @@ router.post('/', async (req, res, next) => {
 })
 
 
-
+// -----------------------delete-запит (видалення контакту за id)----------------------------------------------
 router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
-// Не отримує body
-// Отримує параметр id
-// Викликає функцію removeContact для роботи з json-файлом contacts.json
-// якщо такий id є, повертає json формату {"message": "contact deleted"} і статусом 200
-// якщо такого id немає, повертає json з ключем "message": "Not found" і статусом 404
+  try {
+    const { id } = req.params; 
+    const result = await contacts.removeContact(id);  // отримали контакт або null   (return result || null;)
 
-// // Повертає об'єкт видаленого контакту. Повертає null, якщо контакт з таким id не знайдений.
-// async function removeContact(contactId) { 
-//   const contacts = await listContacts(); //отримуємо масив контактів
-//   const index = contacts.findIndex(item => item.id === contactId); // знаходимо індекс контакту, який хочемо видалити
-//   if(index === -1) { // якщо не знаходить id
-//       return null;
-//   }
-//   const [result] = contacts.splice(index, 1); //повертає видалений елемент
-//   await updateContactsStorage(contacts); //перезапис json
-//   return result; // повертаємо об'єкт видаленого контакту
-// }
+    if(!result) {
+      throw HttpError(404, 'Not Found');
+    }
+    
+    res.json({ message: "contact deleted" }); // статус 200 повертається автоматично
+  } catch(error) {
+    next(error);
+  }
+})
+
+
 
 router.put('/:contactId', async (req, res, next) => {
   res.json({ message: 'template message' })
