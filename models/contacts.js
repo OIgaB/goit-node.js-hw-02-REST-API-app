@@ -1,14 +1,12 @@
 import fs from "fs/promises"; // пакет, що відповідає за роботу з файлами і папками
-
 import path from "path"; // пакет, що відповідає за роботу зі шляхами
-
 import { nanoid } from 'nanoid';           
 
 const contactsPath = path.resolve('models', 'contacts.json'); 
 //метод resolve об'єднує аргументи в 1 шлях і нормалізує його, проставляючи "/", 
 //а також на початок додає абсолютний шлях до кореня проєкту, тобто з диска С до папки з проєктом 
 
-//Загальна службова ф-ція
+//Загальна службова ф-ція (для видалення, додавання і оновлення)
 const updateContactsStorage = contacts => fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 
 
@@ -40,7 +38,7 @@ const removeContact = async (contactId) => {
 }
 
 // Повертає об'єкт доданого контакту
-const addContact = async ({ name, email, phone }) => {   //body
+const addContact = async ({ name, email, phone }) => {   
   const contacts = await listContacts(); //отримуємо масив контактів
   const newContact = {
       id: nanoid(),
@@ -53,7 +51,7 @@ const addContact = async ({ name, email, phone }) => {   //body
   return newContact; // повертаємо об'єкт доданого контакту
 }
 
-
+// Повертає об'єкт оновленого контакту
 const updateContact = async (contactId, body) => {
   const contacts = await listContacts(); //отримуємо масив контактів
   const index = contacts.findIndex(item => item.id === contactId); // знаходимо індекс контакту, який хочемо змінити
