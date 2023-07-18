@@ -21,11 +21,15 @@ app.use('/api/contacts', contactsRouter)
 // спільні для всіх запитів middleware 
 
 app.use((req, res) => {   
+  // console.log('middleware 404 in app');
   res.status(404).json({ message: 'Not found' })  
 }) // якщо прийшов запит на адресу, якої немає, перетвори отриману від express html-розмітку на json і відправ відповідь
 
+
+// усі помилки з файлу routes/api/contacts.js через next(error) потраплять сюди
 app.use((err, req, res, next) => {
-  res.status(500).json({ message: err.message })
+  // console.log('err.message 500 in app:', err.message);
+  res.status(500).json({ message: err.message })   // Contact with id=qdggE76Jtbfd9eWJHrss not found 
 })
 
 export default app;

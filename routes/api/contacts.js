@@ -20,7 +20,8 @@ router.get('/', async (req, res, next) => {
     const result = await contactsService.listContacts(); // отримую усі контакти
     res.json(result); // відправляю масив об'єктів на фронтенд    // статус 200 повертається автоматично
   } catch(error) {
-    next(error); // іди далі і шукай обробника помилок (ф-цію з 4-ма параметрами: err, req, res, next) - express знайде його в app.js (для статуса 500)
+    next(error); // express піде далі шукати обробника помилок (ф-цію з 4-ма параметрами: err, req, res, next) 
+    // і знайде в app.js => в мідлварі для статуса 500
   }
 })
 
@@ -28,17 +29,18 @@ router.get('/', async (req, res, next) => {
 // -----------------------Запит на 1 контакт по id----------------------------------------------
 router.get('/:contactId', async (req, res, next) => {
   try{
-    const { id } = req.params; // в об'єкті params зберігаються усі динамічні частини маршруту {id: 'u9k...'}
-    const result = await contactsService.getContactById(id); // отримали контакт або null   (return result || null;)
-    
-    // якщо такого id не буде (повернулось null), то повернеться обєкт error, і нас перекине в catch
+    const { contactId } = req.params; // в об'єкті params зберігаються усі динамічні частини маршруту {contactId: 'u9k...'}
+    const result = await contactsService.getContactById(contactId); // отримали контакт або null   (return result || null;)
+    // якщо такого id немає (повернулось null), потрібно кинути об'єкт помилки і автоматично потрапити в catch
+    // інакше користувач просто побачить 'null'.
     if(!result) { 
-      throw HttpError(404, `Contact with id=${id} not found`); // див. папку helpers. Щоб в маршрутах не дублювати код
+      throw HttpError(404, `Contact with id=${contactId} not found`); // див. папку helpers. Щоб в маршрутах не дублювати код
     } 
 
     res.json(result); // відправили обєкт з 1м контактом   // статус 200 повертається автоматично
   } catch(error){
-    next(error);
+    next(error); // Error: Contact with id=qdggE76Jtbfd9eWJHrss not found 
+    // express піде далі шукати обробника помилок і знайде в app.js => в мідлварі для статуса 500
   }
 })
 
@@ -48,7 +50,8 @@ router.post('/', async (req, res, next) => {
   try {
     const { error } = addSchema.validate(req.body); 
     //здійснюється перевірка полів об'єкту на відповідність addSchema - повертається об'єкт з результатами перевірки
-    
+    // console.log('PostError in try:', error);
+    // console.log('message:', error.message);
     // одним з ключів цього об'єкту є error, значенням якого буде undefind, якщо валідація успішна
     if(error) { // якщо валідація повернула помилку, то це буде об'єкт помилки з властивістю message (вказано у чому саме проблема)
       throw HttpError(400, error.message); // наприклад, '"phone" is required'     //"missing required name field"
@@ -65,14 +68,14 @@ router.post('/', async (req, res, next) => {
 // -----------------------delete-запит (видалення контакту за id)----------------------------------------------
 router.delete('/:contactId', async (req, res, next) => {
   try {
-    const { id } = req.params; 
-    const result = await contactsService.removeContact(id);  // отримали контакт або null   (return result || null;)
+    const { contactId } = req.params; //{ contactId: 'rsKkOQUi80UsgVPCcL' }
+    const result = await contactsService.removeContact(contactId);  // отримали контакт або null   (return result || null;)
 
     if(!result) {
-      throw HttpError(404, `Contact with id=${id} not found`);
+      throw HttpError(404, `Contact with id=${contactId} not found`);
     }
 
-    res.json({ message: "contact deleted" }); // статус 200 повертається автоматично
+    res.json({ message: `contact with id=${contactId} deleted` }); // статус 200 повертається автоматично
   } catch(error) {
     next(error);
   }
@@ -83,17 +86,30 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => { 
   try {
+    console.log('req.body:', req.body); //{}
     const { error } = addSchema.validate(req.body); 
-    
+    console.log('addSchema error:', error);
+    // [Error [ValidationError]: "name" is required] {
+    //   _original: {},
+    //   details: [
+    //     {
+    //       message: '"name" is required',
+    //       path: [Array],
+    //       type: 'any.required',
+    //       context: [Object]
+    //     }
+    //   ]
+    // }
+    console.log('addSchema error.message:', error.message); //"name" is required
     if(error) {
       throw HttpError(400, error.message);
     }
 
-    const { id } = req.params;
-    const result = await contactsService.updateContact(id, req.body); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
+    const { contactId } = req.params;
+    const result = await contactsService.updateContact(contactId, req.body); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
     
     if(!result) {
-      throw HttpError(404, `Contact with id=${id} not found`);
+      throw HttpError(404, `Contact with id=${contactId} not found`);
     }
 
     res.json(result);  // статус 200 повертається автоматично
