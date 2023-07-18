@@ -1,1 +1,2 @@
-export { default as HttpError } from './HttpError.js'; // реекспорт
+// реекспорт
+export { default as HttpError } from './HttpError.js'; 

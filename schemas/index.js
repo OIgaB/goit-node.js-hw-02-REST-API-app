@@ -1,0 +1,1 @@
+export { default as addSchema } from './contacts-schemas.js';
