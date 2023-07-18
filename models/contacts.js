@@ -52,13 +52,13 @@ const addContact = async ({ name, email, phone }) => {
 }
 
 // Повертає об'єкт оновленого контакту
-const updateContact = async (contactId, body) => {
+const updateContact = async (contactId, body) => {  // або (contactId, {name, email, phone})
   const contacts = await listContacts(); //отримуємо масив контактів
   const index = contacts.findIndex(item => item.id === contactId); // знаходимо індекс контакту, який хочемо змінити
   if(index === -1) {  // якщо не знаходить id
       return null;
   }
-  contacts[index] = {contactId, ...body}; // перезапис знайденого за id об'єкту контакту новим об'єктом
+  contacts[index] = {contactId, ...body}; //або {contactId, name, email, phone} - перезапис знайденого за id об'єкту контакту новим об'єктом
   await updateContactsStorage(contacts); //перезапис json
   return contacts[index]; // повертаємо об'єкт перезаписаного контакту
 }

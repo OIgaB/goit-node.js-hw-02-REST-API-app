@@ -11,7 +11,7 @@ const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short'
 
 app.use(logger(formatsLogger)) // повертає middleware
 app.use(cors())               // повертає middleware 
-app.use(express.json()) // перевіряє чи є тіло запиту, його тип (по заголовку Content-Type)... 
+app.use(express.json()) // перевіряє чи є тіло запиту (для post/put запитів), його тип (по заголовку Content-Type)... 
 // якщо це application/json, то мідлвара буде рядком. JSON.parse перетворить формат тіла запиту на об'єкт 
 
 app.use('/api/contacts', contactsRouter)   
@@ -20,15 +20,13 @@ app.use('/api/contacts', contactsRouter)
 
 // спільні для всіх запитів middleware 
 
-app.use((req, res) => {   
-  // console.log('middleware 404 in app');
+app.use((req, res) => {    // наприклад, post-запит без id
   res.status(404).json({ message: 'Not found' })  
 }) // якщо прийшов запит на адресу, якої немає, перетвори отриману від express html-розмітку на json і відправ відповідь
 
 
 // усі помилки з файлу routes/api/contacts.js через next(error) потраплять сюди
 app.use((err, req, res, next) => {
-  // console.log('err.message 500 in app:', err.message);
   res.status(500).json({ message: err.message })   // Contact with id=qdggE76Jtbfd9eWJHrss not found 
 })
 

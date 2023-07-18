@@ -50,15 +50,13 @@ router.post('/', async (req, res, next) => {
   try {
     const { error } = addSchema.validate(req.body); 
     //здійснюється перевірка полів об'єкту на відповідність addSchema - повертається об'єкт з результатами перевірки
-    // console.log('PostError in try:', error);
-    // console.log('message:', error.message);
     // одним з ключів цього об'єкту є error, значенням якого буде undefind, якщо валідація успішна
     if(error) { // якщо валідація повернула помилку, то це буде об'єкт помилки з властивістю message (вказано у чому саме проблема)
       throw HttpError(400, error.message); // наприклад, '"phone" is required'     //"missing required name field"
     } 
 
     const result = await contactsService.addContact(req.body);
-    res.status(201).json(result); // успішно додали книгу на сервер
+    res.status(201).json(result); // успішно додали контакт на сервер
   } catch(error) {
     next(error);
   }
@@ -86,28 +84,15 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => { 
   try {
-    console.log('req.body:', req.body); //{}
-    const { error } = addSchema.validate(req.body); 
-    console.log('addSchema error:', error);
-    // [Error [ValidationError]: "name" is required] {
-    //   _original: {},
-    //   details: [
-    //     {
-    //       message: '"name" is required',
-    //       path: [Array],
-    //       type: 'any.required',
-    //       context: [Object]
-    //     }
-    //   ]
-    // }
-    console.log('addSchema error.message:', error.message); //"name" is required
+    const { error } = addSchema.validate(req.body); //error: undefind, якщо валідація успішна
+
     if(error) {
-      throw HttpError(400, error.message);
+      throw HttpError(400, error.message);  // наприклад, якщо передати не повний об'єкт - "\"phone\" is required"
     }
 
     const { contactId } = req.params;
     const result = await contactsService.updateContact(contactId, req.body); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
-    
+
     if(!result) {
       throw HttpError(404, `Contact with id=${contactId} not found`);
     }
