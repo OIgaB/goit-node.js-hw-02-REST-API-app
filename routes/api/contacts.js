@@ -1,25 +1,23 @@
-const express = require('express')
+import express from 'express';
 
-const router = express.Router()
+import { contactsController } from '../../controllers/index.js'; // імпорт ф-цій-контролерів (огорнуті в декоратор try/catch)  
+import { addSchema } from '../../schemas/index.js';
+import { validateBody } from '../../decorators/index.js'
+import { isEmptyBody } from '../../middlewares/index.js';
 
-router.get('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+const router = express.Router(); // об'єкт, який описує окремі маршрути (створює 1 аркуш записної книжки)
 
-router.get('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
 
-router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get('/', contactsController.listContacts);
 
-router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.get('/:contactId', contactsController.getContactById);
 
-router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+router.post('/', isEmptyBody, validateBody(addSchema), contactsController.addContact);
+// якщо буде помилка, то через next одразу потрапимо в app.js; якщо без помилки, то буде виклик controllers.addContact
 
-module.exports = router
+router.delete('/:contactId', contactsController.removeContact);
+
+router.put('/:contactId', isEmptyBody, validateBody(addSchema), contactsController.updateContact);
+
+
+export default router;
