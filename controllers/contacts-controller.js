@@ -118,11 +118,11 @@ const updateById = async (req, res) => {
 
 
 // -----------------------putch-запит (коригування контакту за id)----------------------------------------------
-const updateFavorite = async (req, res) => {
+const updateStatusContact = async (req, res) => {
   const { contactId } = req.params;
   const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true }); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
   if(!result) {
-    throw HttpError(404, `Contact with id=${contactId} not found`);
+    throw HttpError(404, `Contact with id=${contactId} not found`); 
   }
   res.json(result);  // статус 200 повертається автоматично
 }
@@ -144,7 +144,7 @@ export default { // під час експорту кожну ф-цію заго
     getById: ctrlWrapper(getById),
     add: ctrlWrapper(add),
     updateById: ctrlWrapper(updateById),
-    updateFavorite: ctrlWrapper(updateFavorite),
+    updateStatusContact: ctrlWrapper(updateStatusContact),
     deleteById: ctrlWrapper(deleteById),
 }
 //Якщо об'єкт не проходить валідацію по mongoose-схемі, то виникає помилка. 

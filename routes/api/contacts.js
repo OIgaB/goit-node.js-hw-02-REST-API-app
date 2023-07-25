@@ -17,8 +17,9 @@ router.post('/', isEmptyBody, validateBody(schemas.addSchema), contactsControlle
 
 router.put('/:contactId', isValidId, isEmptyBody, validateBody(schemas.addSchema), contactsController.updateById);
 
-router.patch('/:contactId/favorite', isValidId, isEmptyBody, validateBody(schemas.updateFavoriteSchema), contactsController.updateFavorite);
+router.patch('/:contactId/favorite', isValidId, isEmptyBody, validateBody(schemas.updateFavoriteSchema), contactsController.updateStatusContact);
 //favorite - вказали поле, яке треба оновити. Передаємо іншу joi-схему
+// Якщо body немає, повертає json з ключем {"message": "missing field favorite"} і статусом 400
 
 router.delete('/:contactId', isValidId, contactsController.deleteById);
 

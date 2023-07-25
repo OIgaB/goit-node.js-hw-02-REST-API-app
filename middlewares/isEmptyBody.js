@@ -10,3 +10,6 @@ const isEmptyBody = (req, res, next) => {
 }
 
 export default isEmptyBody;
+
+
+// patch: Якщо body немає, повертає json з ключем {"message": "missing field favorite"} і статусом 400
