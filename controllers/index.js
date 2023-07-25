@@ -1,1 +1,1 @@
-export { default as contactsController } from "./contacts-controller.js"; //реекспорт
+export { default as ctrl } from "./contacts-controller.js"; //реекспорт
