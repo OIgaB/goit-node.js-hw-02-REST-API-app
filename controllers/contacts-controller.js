@@ -100,12 +100,20 @@ const add = async (req, res) => {
 
 // -----------------------put-запит (коригування контакту за id)----------------------------------------------
 const updateById = async (req, res) => {
-      const { contactId } = req.params;
-      const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true }); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
-      if(!result) {
-        throw HttpError(404, `Contact with id=${contactId} not found`);
-      }
-      res.json(result);  // статус 200 повертається автоматично
+  const { contactId } = req.params;
+  const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true }); //в тіло передаємо всі поля, навіть, якщо змінили значення тільки одного
+  //метод findByIdAndUpdate повертає стару версію документа, хоч БД і оновлює; щоб поверталася нова версія - 3м аргументом { new: true }
+      
+  //mongoose за замовчуванням не проводить валідацію для findByIdAndUpdate, щоб проводив - 3й аргумент { runValidators: true }
+  //const result = await Contact.findByIdAndUpdate(contactId, req.body, { new: true, runValidators: true }); 
+  //щоб не забути це прописати тут, виносимо цю валідацію в схему з методом .pre
+
+  //Якщо передати в id щось, що не є id (наприклад, не 21 символ, а 20), то null не повернеться і if не спрацює,
+  //а mongoose викине помилку (щоб цього уникнути і викинути 400 помилку в папці middlewares є ф-ція isValidId)
+  if(!result) {
+    throw HttpError(404, `Contact with id=${contactId} not found`);
+  }
+  res.json(result);  // статус 200 повертається автоматично
 }
 
 
@@ -123,8 +131,8 @@ const updateFavorite = async (req, res) => {
 // -----------------------delete-запит (видалення контакту за id)----------------------------------------------
 const deleteById = async (req, res) => {
     const { contactId } = req.params; //{ contactId: 'rsKkOQUi80UsgVPCcL' }
-    const result = await Contact.findByIdAndRemove(contactId);  // отримали контакт або null   (return result || null;)
-    console.log(contactId);
+    const result = await Contact.findByIdAndRemove(contactId);  // або Contact.deleteById
+    // отримали контакт або null   (return result || null;)
     if(!result) {
         throw HttpError(404, `Contact with id=${contactId} not found`);
     }
@@ -139,3 +147,7 @@ export default { // під час експорту кожну ф-цію заго
     updateFavorite: ctrlWrapper(updateFavorite),
     deleteById: ctrlWrapper(deleteById),
 }
+//Якщо об'єкт не проходить валідацію по mongoose-схемі, то виникає помилка. 
+// Її ловить ctrlWrapper і через next(error) передає в обробник помилок в app.js (middleware з 4ма параметрами). 
+// Оскільки методи mongoose видають помилки без статусу, обробник помилок присвоює їм за замовчуванням статус 500.
+// Але помилка валідації тіла повинна мати статус 400. Тому окремо створили ф-цію handleMongooseError (в папці middlewares)

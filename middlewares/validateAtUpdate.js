@@ -1,4 +1,5 @@
-// Запускаємо валідацію при оновленні (за замовчуванням runValidators, який створений для оновлення: false)
+// Запускаємо валідацію при оновленні методом findByIdAndUpdate (put/putch-запити) 
+//за замовчуванням runValidators (створений для оновлення): false
 
 const validateAtUpdate = function(next) { // стрілочна ф-ція не підійде, бо втратимо this
     this.options.runValidators = true; 
