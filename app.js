@@ -27,7 +27,9 @@ app.use((req, res) => {    // наприклад, post-запит без id
 
 // усі помилки з файлу routes/api/contacts.js через next(error) потраплять сюди
 app.use((err, req, res, next) => {
-  res.status(500).json({ message: err.message })   // Contact with id=qdggE76Jtbfd9eWJHrss not found 
+  const {status = 500, message = "Server error"} = err;
+  // res.status(500).json({ message: err.message })   // Contact with id=qdggE76Jtbfd9eWJHrss not found 
+  res.status(status).json({ message })
 })
 
 export default app;
