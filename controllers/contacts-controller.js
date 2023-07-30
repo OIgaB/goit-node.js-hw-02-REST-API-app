@@ -6,7 +6,20 @@ import { ctrlWrapper } from '../decorators/index.js';
 
 // --------------------------Запит на усі контакти----------------------------------------------
 const getAll = async (req, res) => {
-  const result = await Contact.find({}, "-createdAt -updatedAt"); // поверни всі поля, крім тих, що в дужках
+  const {_id: owner } = req.user; // дізнаємося, хто робить запит (деструктуризація з перейменуванням)
+
+  const { page = 1, limit = 20 } = req.query; // page - сторінка, яку хочу отримати; limit - к-ть контактів (об'єктів) на сторінці
+  // 1 та 10 - це значення за замовчуванням
+
+  const skip = (page - 1) * limit;
+
+  const result = await Contact.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate('owner', 'email subscription'); 
+  // 1й аргумент - знайди лише ті книги, які додала конкретна людина - owner;
+  // 2й - поверни всі поля, крім createdAt і updatedAt
+  // 3й - додаткові налаштування - тут - параметрів запиту (пагінація). Mongoose має вбудований інструмент для пагінації:
+  // skip - скільни пропустити об'єктів у БД з початку; limit - скільки повернути
+  // populate - інструмент для розширення запиту - в тому, що ти знайшов, розшир інфо про 'owner' (обмежся тільки email і subscription). Тепер буде не 'owner': 'sfcsd8se3', а 'owner': {...}
+
   res.json(result); // відправляю масив об'єктів на фронтенд     // статус 200 повертається автоматично
 }
 
@@ -25,7 +38,8 @@ const getById = async (req, res) => {
 
 // -----------------------post-запит (додавання нового контакту)----------------------------------------------
 const add = async (req, res) => {
-  const result = await Contact.create(req.body); 
+  const { _id: owner } = req.user;
+  const result = await Contact.create(...req.body, owner); // тепер кожний контакт буде належати конкретному його створювачу
   res.status(201).json(result); // успішно додали контакт на сервер
 }
 

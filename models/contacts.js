@@ -27,6 +27,11 @@ const contactSchema = new Schema({
   favorite: {
     type: Boolean,
     default: false,
+  },
+  owner: { // той, хто надсилає запити
+    type: Schema.Types.ObjectId,  //тут зберігається id, який генерується mongoDB (особливий тип даних)
+    ref: 'user', //назва колекції, з якої цей id
+    required: true,
   }
 }, { versionKey: false, timestamps: true }); // об'єкт налаштувань
 //versionKey - версійність документа, що створюється автоматично: _v:0

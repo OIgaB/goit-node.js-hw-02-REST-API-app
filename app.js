@@ -1,7 +1,10 @@
 import express from 'express';
 import logger from 'morgan'; //пакет щоб логувати (виводити в консоль) запити - наприклад, для дебагінгу
 import cors from 'cors';
-import contactsRouter from './routes/api/contacts.js'; // імпорт маршрутів (окремої сторінки записної книги)
+
+// імпорт маршрутів (окремі сторінки записної книги)
+import authRouter from './routes/api/auth.js';
+import contactsRouter from './routes/api/contacts.js'; 
 
 const app = express(); // створили веб-сервер
 
@@ -14,8 +17,9 @@ app.use(cors())               // повертає middleware
 app.use(express.json()) // перевіряє чи є тіло запиту (для post/put запитів), його тип (по заголовку Content-Type)... 
 // якщо це application/json, то мідлвара буде рядком. JSON.parse перетворить формат тіла запиту на об'єкт 
 
+// якщо прийде запит, який починається з '/api/...', то обробник цього запиту шукай в authRouter/contactsRouter
+app.use('/api/auth', authRouter) 
 app.use('/api/contacts', contactsRouter)   
-// якщо прийде запит, який починається з '/api/contacts', то обробник цього запиту шукай в contactsRouter
 
 
 // спільні для всіх запитів middleware 

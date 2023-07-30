@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv'; або
+import 'dotenv/config';
+
 
 import app from './app.js';
 
-dotenv.config(); // метод config() шукає текстовий файл .env і додає з нього секретні дані у змінні оточення {ключ: значення}
+//dotenv.config(); // метод config() шукає текстовий файл .env і додає з нього секретні дані у змінні оточення {ключ: значення}
                  //  тобто у налаштування компютера (process.env)
 
 const { DB_HOST, PORT } = process.env;
