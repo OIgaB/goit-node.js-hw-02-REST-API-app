@@ -1,5 +1,4 @@
 import express from 'express';
-
 import { contactsCtrl } from '../../controllers/index.js'; // імпорт ф-цій-контролерів (огорнуті в декоратор try/catch)  
 import { validateBody } from '../../decorators/index.js'
 import { schemas } from '../../models/contacts.js';

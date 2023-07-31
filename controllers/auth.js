@@ -17,8 +17,10 @@ const register = async(req, res) => {
     const newUser = await User.create({...req.body, password: hashPassword}) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
     res.status(201).json({
-        email: newUser.email,
-        subscription: newUser.subscription,
+        user: {
+            email: newUser.email,
+            subscription: newUser.subscription,            
+        }
     })
 };
 
@@ -37,7 +39,7 @@ const login = async(req, res) => {
     };
     //якщо паролі співпадають, то створюємо токен (метод sign())
     const token = jwt.sign(payload, SECRET_KEY, {expiresIn: '23h'}); //без expiresIn токен житиме вічно
-    await User.findByIdAndUpdate(user._id, {token}); // записуємо в БД токен користувача, який хоче залогінитися
+    await User.findByIdAndUpdate(user._id, {token}); // записуємо в БД токен користувача, який хоче залогінитися //put/putch-запит
 
     res.json({
         token, // відправляємо на фронтенд токен
@@ -50,9 +52,6 @@ const login = async(req, res) => {
 
 const getCurrent = async(req, res) => {
     const { email, subscription } = req.user;
-    if(!email) {
-        throw HttpError(401, 'Not authorized'); 
-    }
 
     res.json({
         email,
@@ -61,20 +60,30 @@ const getCurrent = async(req, res) => {
 };
 
 const logout = async(req, res) => {
-    const {_id} = req.user; // беремо id користувача, який хоче розлогінитися
-    if(!_id) {
-        throw HttpError(401, 'Not authorized'); 
-    }    
-    await User.findByIdAndUpdate(_id, {token: ''});
+    const {_id} = req.user; // беремо id користувача, який хоче розлогінитися  
+    await User.findByIdAndUpdate(_id, {token: ""});   //put-запит
+    console.log('this is logout');
 
     res.status(204).json({
-        message: 'Logout success'
-    })
+        message: 'Logout success' // повідомлення чомусь не відображається
+    });
 }
+
+const updateSubscription = async(req, res) => { 
+    const { _id } = req.user;
+    console.log('req.user:', req.user);
+    const result = await User.findByIdAndUpdate(_id, req.body, { new: true }); //patch-запит (коригування значення підписки)
+    console.log("result в updateSubscription:", result);
+    if(!result) {
+      throw HttpError(404, `User with id=${_id} not found`); 
+    }
+    res.json(result);  // статус 200 повертається автоматично
+};
 
 export default { //огортаємо все в try/catch
     register: ctrlWrapper(register),
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent), //тут ми не викидаємо помилку, але для універсальності
     logout: ctrlWrapper(logout),
+    updateSubscription: ctrlWrapper(updateSubscription),
 }

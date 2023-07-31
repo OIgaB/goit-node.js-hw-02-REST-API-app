@@ -6,12 +6,11 @@ import { authenticate } from '../../middlewares/index.js';
 
 const router = express.Router();
 
-//signup
-router.post('/register', validateBody(schemas.registerSchema), authCtrl.register);
-//signin
-router.post('/login', validateBody(schemas.loginSchema), authCtrl.login);
+router.post('/register', validateBody(schemas.registerSchema), authCtrl.register); //signup
+router.post('/login', validateBody(schemas.loginSchema), authCtrl.login); //signin
 
 router.get('/current', authenticate, authCtrl.getCurrent);
-router.get('/logout', authenticate, authCtrl.logout); // будемо знати, хто хоче розлогінитись
+router.patch('/subscription', authenticate, validateBody(schemas.subscriptionSchema), authCtrl.updateSubscription);
+router.post('/logout', authenticate, authCtrl.logout); // будемо знати, хто хоче розлогінитись
 
 export default router; // імпорт в app.js

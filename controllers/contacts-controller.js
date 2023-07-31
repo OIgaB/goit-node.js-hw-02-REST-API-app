@@ -38,8 +38,18 @@ const getById = async (req, res) => {
 
 // -----------------------post-запит (додавання нового контакту)----------------------------------------------
 const add = async (req, res) => {
-  const { _id: owner } = req.user;
-  const result = await Contact.create(...req.body, owner); // тепер кожний контакт буде належати конкретному його створювачу
+  const { _id: owner } = req.user; // new ObjectId("64c6f0e733523b6f5a4ba4b8"),
+  const result = await Contact.create({...req.body, owner}); // тепер кожний контакт буде належати конкретному його створювачу
+  // {
+  //   name: 'Zoi Doich',
+  //   email: 'nulla.ante@rl.co.uk',
+  //   phone: '(992) 914-3792',
+  //   favorite: false,
+  //   owner: new ObjectId("64c6f0e733523b6f5a4ba4b8"),
+  //   _id: new ObjectId("64c72713f9d52ec1573daf63"),
+  //   createdAt: 2023-07-31T03:14:27.161Z,
+  //   updatedAt: 2023-07-31T03:14:27.161Z
+  // }
   res.status(201).json(result); // успішно додали контакт на сервер
 }
 
@@ -67,7 +77,6 @@ const updateById = async (req, res) => {
 const updateStatusContact = async (req, res) => {
   const { id } = req.params;
   const result = await Contact.findByIdAndUpdate(id, req.body, { new: true }); 
-  console.log(result); 
   if(!result) {
     throw HttpError(404, `Contact with id=${id} not found`); 
   }
