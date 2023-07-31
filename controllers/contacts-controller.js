@@ -8,18 +8,17 @@ import { ctrlWrapper } from '../decorators/index.js';
 const getAll = async (req, res) => {
   const {_id: owner } = req.user; // дізнаємося, хто робить запит (деструктуризація з перейменуванням)
 
-  const { page = 1, limit = 20 } = req.query; // page - сторінка, яку хочу отримати; limit - к-ть контактів (об'єктів) на сторінці
+  const { page = 1, limit = 20, favorite } = req.query; // page - сторінка, яку хочу отримати; limit - к-ть контактів (об'єктів) на сторінці
   // 1 та 10 - це значення за замовчуванням
-
   const skip = (page - 1) * limit;
 
-  const result = await Contact.find({owner}, "-createdAt -updatedAt", {skip, limit}).populate('owner', 'email subscription'); 
-  // 1й аргумент - знайди лише ті книги, які додала конкретна людина - owner;
-  // 2й - поверни всі поля, крім createdAt і updatedAt
-  // 3й - додаткові налаштування - тут - параметрів запиту (пагінація). Mongoose має вбудований інструмент для пагінації:
-  // skip - скільни пропустити об'єктів у БД з початку; limit - скільки повернути
-  // populate - інструмент для розширення запиту - в тому, що ти знайшов, розшир інфо про 'owner' (обмежся тільки email і subscription). Тепер буде не 'owner': 'sfcsd8se3', а 'owner': {...}
-
+  const result = await Contact.find(favorite ? { owner, favorite } : { owner }, "-createdAt -updatedAt").populate('owner', 'email subscription');   
+  //отримуємо всі контакти конкретного юзера ()
+    // 1й аргумент - якщо в параметрах пошуку є favorite то поверти лише ті контакти-об'єкти конкретного користувача (owner), значенням якого є true, інакше - повертай всі його контакти без фільтрації;
+    // 2й - поверни всі поля, крім createdAt і updatedAt
+    // 3й - додаткові налаштування - тут - параметрів запиту (пагінація). Mongoose має вбудований інструмент для пагінації:
+    // skip - скільни пропустити об'єктів у БД з початку; limit - скільки повернути
+    // populate - інструмент для розширення запиту - в тому, що ти знайшов, розшир інфо про 'owner' (обмежся тільки email і subscription). Тепер буде не 'owner': 'sfcsd8se3', а 'owner': {...}    
   res.json(result); // відправляю масив об'єктів на фронтенд     // статус 200 повертається автоматично
 }
 

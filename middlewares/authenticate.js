@@ -7,7 +7,6 @@ const { SECRET_KEY } = process.env;
 
 //завдяки цій мідлварі дізнаємося чи токен валідний і хто робить запит
 const authenticate = async(req, res, next) => {
-    console.log('This is authenticate')
     const { authorization = '' } = req.headers; // всі заголовки
     //якщо токен не отримаємо, то authorization буде undefined, а split з undefined не зробиш -> зламається бекенд, тому = ''
     const [bearer, token] = authorization.split(" "); //split розділяє рядок на масив - результат дії authorization.split(" "): ['Bearer', 'e...']
