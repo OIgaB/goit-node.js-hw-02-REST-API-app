@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import Joi from 'joi';  // бібліотека, що перевіряє тіло запиту
-import { validateAtUpdate, handleMongooseError } from '../middlewares/index.js';
-
+import { validateAtUpdate } from '../middlewares/validateAtUpdate.js';
+import { handleMongooseError } from '../middlewares/handleMongooseError.js';
 
 const emailRegExp = [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Invalid email address'];
 const phoneRegExp = [/^\(\d{3}\) \d{3}-\d{4}$/, 'Phone number must be in the format (123) 456-7890'];
@@ -27,6 +27,11 @@ const contactSchema = new Schema({
   favorite: {
     type: Boolean,
     default: false,
+  },
+  owner: { // той, хто надсилає запити
+    type: Schema.Types.ObjectId,  //тут зберігається id, який генерується mongoDB (особливий тип даних)
+    ref: 'user', //назва колекції, з якої цей id
+    required: true,
   }
 }, { versionKey: false, timestamps: true }); // об'єкт налаштувань
 //versionKey - версійність документа, що створюється автоматично: _v:0
