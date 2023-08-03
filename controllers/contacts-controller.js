@@ -1,7 +1,8 @@
+import fs from 'fs/promises';
+import path from "path";
 import { Contact } from '../models/contacts.js'; // імпорт моделі
 import { HttpError } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
-
 
 
 // --------------------------Запит на усі контакти користувача або тільки улюблені----------------------------------------------
@@ -36,9 +37,17 @@ const getById = async (req, res) => {
 
 
 // -----------------------post-запит (додавання нового контакту)----------------------------------------------
+const avatarPath = path.resolve("public", "avatars"); // шлях до папки з файлом
+
 const add = async (req, res) => {
   const { _id: owner } = req.user; // new ObjectId("64c6f0e733523b6f5a4ba4b8"),
-  const result = await Contact.create({...req.body, owner}); // тепер кожний контакт буде належати конкретному його створювачу
+
+  // const { path: oldPath, filename } = req.file; //  path до temp; filename - нова назва файлу
+  // const newPath = path.join(avatarPath, filename); // створюємо новий шлях з ім'ям файлу
+  // await fs.rename(oldPath, newPath); // переміщення файла
+  // const avatar = path.join('avatars', filename); // папку 'public' не пишемо, вона вже вказана в мідлварі в app.js
+
+  const result = await Contact.create({...req.body, owner}); //avatar// тепер кожний контакт буде належати конкретному його створювачу
   // {
   //   name: 'Zoi Doich',
   //   email: 'nulla.ante@rl.co.uk',

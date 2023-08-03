@@ -1,10 +1,14 @@
 import bcrypt from 'bcrypt';  // пакет для хешування (працює асинхронно)
 import jwt from 'jsonwebtoken'; // пакет для створення токету
+import gravatar from 'gravatar';
+import fs from 'fs/promises';
+import path from 'path';
 import { User } from '../models/user.js';
 import { HttpError } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
 
 const { SECRET_KEY } = process.env; // беремо секретний ключ у змінних оточеннях
+
 
 const register = async(req, res) => {
     const { email, password } = req.body;
@@ -14,7 +18,9 @@ const register = async(req, res) => {
     }
     const hashPassword = await bcrypt.hash(password, 10); //перед тим як зберегти пароль в БД, хешуємо його
     // 10 - сіль - набір випадкових символів - складність алгоритму генерації солі
-    const newUser = await User.create({...req.body, password: hashPassword}) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
+    
+    const avatarURL = gravatar.url(email); // генеруємо посилання на тимчасову аватарку
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
     res.status(201).json({
         user: {
@@ -80,10 +86,36 @@ const updateSubscription = async(req, res) => {
     res.json(result);  // статус 200 повертається автоматично
 };
 
+
+const avatarPath = path.resolve("public", "avatars"); // шлях до папки з файлом
+
+const updateAvatar = async(req, res) => {
+    const { _id } = req.user; // new ObjectId("64c6f0e733523b6f5a4ba4b8"),
+
+    const { path: oldPath, filename } = req.file; //  path до temp; filename - нова назва файлу
+    const newPath = path.join(avatarPath, filename); // створюємо новий шлях з ім'ям файлу
+    await fs.rename(oldPath, newPath); // переміщення файла
+    const avatarURL = path.join('avatars', filename); // записуємо шлях в body // папку 'public' не пишемо, вона вже вказана в мідлварі в app.js
+  
+    await Contact.findByIdAndUpdate(_id, {avatarURL}); // знаючи id користувача, можемо перезаписати avatarURL
+    // {
+    //   name: 'Zoi Doich',
+    //   email: 'nulla.ante@rl.co.uk',
+    //   phone: '(992) 914-3792',
+    //   favorite: false,
+    //   owner: new ObjectId("64c6f0e733523b6f5a4ba4b8"),
+    //   _id: new ObjectId("64c72713f9d52ec1573daf63"),
+    //   createdAt: 2023-07-31T03:14:27.161Z,
+    //   updatedAt: 2023-07-31T03:14:27.161Z
+    // }
+    res.status(201).json({avatarURL}); // успішно додали контакт на сервер
+}
+
 export default { //огортаємо все в try/catch
     register: ctrlWrapper(register),
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent), //тут ми не викидаємо помилку, але для універсальності
     logout: ctrlWrapper(logout),
     updateSubscription: ctrlWrapper(updateSubscription),
+    updateAvatar: ctrlWrapper(updateAvatar),
 }
