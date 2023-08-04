@@ -26,6 +26,7 @@ const userSchema = new Schema({
       enum: subscriptionList,
       default: "starter"
     },
+    avatarURL: String,
     token: {        // під час логіну користувача будемо записувати токен в БД
       type: String,
       default: ""

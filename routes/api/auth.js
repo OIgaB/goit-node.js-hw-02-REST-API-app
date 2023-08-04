@@ -12,6 +12,6 @@ router.post('/login', validateBody(schemas.loginSchema), authCtrl.login); //sign
 router.get('/current', authenticate, authCtrl.getCurrent);
 router.patch('/subscription', authenticate, validateBody(schemas.subscriptionSchema), authCtrl.updateSubscription);
 router.post('/logout', authenticate, authCtrl.logout); 
-router.patch('/avatars', authenticate, upload.single('avatar'), authCtrl.updateAvatar);
+router.patch('/avatars', authenticate, upload.single('avatar'), authCtrl.updateAvatar); //можливість змінити аватарку
 
 export default router; // імпорт в app.js

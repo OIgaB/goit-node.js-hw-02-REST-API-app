@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from "path";
+// import fs from 'fs/promises';
+// import path from "path";
 import { Contact } from '../models/contacts.js'; // імпорт моделі
 import { HttpError } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
@@ -37,7 +37,7 @@ const getById = async (req, res) => {
 
 
 // -----------------------post-запит (додавання нового контакту)----------------------------------------------
-const avatarPath = path.resolve("public", "avatars"); // шлях до папки з файлом
+// const avatarPath = path.resolve("public", "avatars"); // шлях до папки з файлом
 
 const add = async (req, res) => {
   const { _id: owner } = req.user; // new ObjectId("64c6f0e733523b6f5a4ba4b8"),

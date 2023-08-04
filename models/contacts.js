@@ -28,7 +28,7 @@ const contactSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  avatarURL: String,
+  // avatarURL: String,
   // avatarURL: {  те саме, що і вище
   //   type: String,
   // },
