@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'; // пакет для створення токе
 import gravatar from 'gravatar';
 import fs from 'fs/promises';
 import path from 'path';
+import Jimp from "jimp";  //image processing library for Node.js (resizing, cropping, applying filters...)
 import { User } from '../models/user.js';
 import { HttpError } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
@@ -103,16 +104,29 @@ const updateAvatar = async(req, res) => {
     //     path: 'C:\\Users\\Olga\\Desktop\\GitHub\\goit-node.js-hw-02-REST-API-app\\temp\\1691116345578-509986521_drink.jpg',
     //     size: 58875
     //   }
-
     const newPath = path.join(avatarPath, filename); // створюємо новий шлях (до public\avatars) з ім'ям файлу
     //newPath = C:\Users\Olga\Desktop\GitHub\goit-node.js-hw-02-REST-API-app\public\avatars\1691116545855-256001994_drink.jpg
 
-    await fs.rename(oldPath, newPath); // переміщення файла до public\avatars
+    Jimp.read(oldPath)
+        .then(image => {
+            return image
+            .resize(250, 250) // resize
+            // .resize(Jimp.AUTO, 250)  //ширина відповідно
+            //.resize(250, Jimp.AUTO)   // висота відповідно
+            // .quality(60) // set JPEG quality
+            // .greyscale() // чорно-білий знімок
+            .write(newPath); // зберігає оброблене зображ. за вказаним маршрутом (до public\avatars), але не видаляє з temp оригінальне
+        })
+        .catch(err => {
+            console.error(err);
+        });  
+
+    await fs.rename(oldPath, newPath); // переміщення файла до public\avatars  (переміщення вже було реалізоване в Jimp), + видалення з temp оригінального
 
     const avatarURL = path.join('avatars', filename); // записуємо шлях в body // папку 'public' не пишемо, вона вже вказана в мідлварі в app.js
     // avatarURL: avatars\1691116849916-469261661_drink.jpg
 
-    const ff = await User.findByIdAndUpdate(_id, {avatarURL}); // знаючи id користувача, можемо перезаписати avatarURL
+    await User.findByIdAndUpdate(_id, {avatarURL}); // знаючи id користувача, можемо перезаписати avatarURL
     // {
     //     _id: new ObjectId("64cc5caaf34040bef1e8dff5"),
     //     email: 'example2@example.com',
