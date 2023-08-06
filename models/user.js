@@ -3,7 +3,6 @@ import Joi from 'joi';
 import { validateAtUpdate} from '../middlewares/validateAtUpdate.js'
 import { handleMongooseError } from '../middlewares/handleMongooseError.js';
 
-console.log(validateAtUpdate);
 const emailRegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const emailMessage = 'Sorry, the provided email address is not valid. Please ensure it follows the correct format. Examples of valid email addresses: john.doe@example.com, jane_doe123@example.co.uk, user123@example-domain.com';
 const subscriptionList = ["starter", "pro", "business"];

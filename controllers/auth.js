@@ -70,7 +70,6 @@ const getCurrent = async(req, res) => {
 const logout = async(req, res) => {
     const {_id} = req.user; // беремо id користувача, який хоче розлогінитися  
     await User.findByIdAndUpdate(_id, {token: ""});   //put-запит
-    console.log('this is logout');
 
     res.status(204).json({
         message: 'Logout success' // повідомлення чомусь не відображається
@@ -79,9 +78,7 @@ const logout = async(req, res) => {
 
 const updateSubscription = async(req, res) => { 
     const { _id } = req.user;
-    console.log('req.user:', req.user);
     const result = await User.findByIdAndUpdate(_id, req.body, { new: true }); //patch-запит (коригування значення підписки)
-    console.log("result в updateSubscription:", result);
     if(!result) {
       throw HttpError(404, `User with id=${_id} not found`); 
     }
