@@ -51,26 +51,14 @@
             "password": "example2password"
         };
         const { statusCode, body } = await request(app).post("/api/auth/login").send(loginData);
-        // body: {
-        //     token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0Y2Y5Y2RiM2RkMDNkMjhhZjc4M2E2YyIsImlhdCI6MTY5MTMyODE3NSwiZXhwIjoxNjkxNDEwOTc1fQ.ivDVrkh3CRk2Ohb4CNMYXUInkj5dPJ6yf3nLzEg6IRo',
-        //     user: { email: 'example2@example.com', subscription: 'starter' }
-        //   }
+
         expect(statusCode).toBe(200);
         expect(body.token).toBeDefined();  //toBeDefined() checks if the value is not undefined.
 
         expect(body.user.email).toBe(loginData.email);
 
         const user = await User.findOne({email: loginData.email}); // перевіряємо чи записалось в БД
-        // user: {
-        //     _id: new ObjectId("64cf9cdb3dd03d28af783a6c"),
-        //     email: 'example2@example.com',
-        //     password: '$2b$10...',
-        //     subscription: 'starter',
-        //     avatarURL: '//www.gravatar.com/avatar/b75a7dd26f16ae13b440190aef177ac1',
-        //     token: 'eyJhb...',
-        //     createdAt: 2023-08-06T13:15:07.342Z,
-        //     updatedAt: 2023-08-06T13:19:51.164Z
-        //   }
+
         expect(user.email).toBe(loginData.email);
         expect(typeof user.email).toBe('string');
 
