@@ -1,10 +1,15 @@
 import bcrypt from 'bcrypt';  // пакет для хешування (працює асинхронно)
 import jwt from 'jsonwebtoken'; // пакет для створення токету
+import gravatar from 'gravatar';
+import fs from 'fs/promises';
+import path from 'path';
+import Jimp from "jimp";  //image processing library for Node.js (resizing, cropping, applying filters...)
 import { User } from '../models/user.js';
 import { HttpError } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
 
 const { SECRET_KEY } = process.env; // беремо секретний ключ у змінних оточеннях
+
 
 const register = async(req, res) => {
     const { email, password } = req.body;
@@ -14,12 +19,15 @@ const register = async(req, res) => {
     }
     const hashPassword = await bcrypt.hash(password, 10); //перед тим як зберегти пароль в БД, хешуємо його
     // 10 - сіль - набір випадкових символів - складність алгоритму генерації солі
-    const newUser = await User.create({...req.body, password: hashPassword}) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
+    
+    const avatarURL = gravatar.url(email); // генеруємо посилання на тимчасову аватарку по email-у користувача
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
     res.status(201).json({
         user: {
             email: newUser.email,
-            subscription: newUser.subscription,            
+            subscription: newUser.subscription,    
+            avatarURL: newUser.avatarURL,        
         }
     })
 };
@@ -62,7 +70,6 @@ const getCurrent = async(req, res) => {
 const logout = async(req, res) => {
     const {_id} = req.user; // беремо id користувача, який хоче розлогінитися  
     await User.findByIdAndUpdate(_id, {token: ""});   //put-запит
-    console.log('this is logout');
 
     res.status(204).json({
         message: 'Logout success' // повідомлення чомусь не відображається
@@ -71,14 +78,47 @@ const logout = async(req, res) => {
 
 const updateSubscription = async(req, res) => { 
     const { _id } = req.user;
-    console.log('req.user:', req.user);
     const result = await User.findByIdAndUpdate(_id, req.body, { new: true }); //patch-запит (коригування значення підписки)
-    console.log("result в updateSubscription:", result);
     if(!result) {
       throw HttpError(404, `User with id=${_id} not found`); 
     }
     res.json(result);  // статус 200 повертається автоматично
 };
+
+
+const avatarPath = path.resolve("public", "avatars"); // шлях до папки з файлом
+
+const updateAvatar = async(req, res) => {
+    const { _id } = req.user; // new ObjectId("64c6f0e733523b6f5a4ba4b8"),
+    const { path: oldPath, filename } = req.file; //  path до temp; filename - нова назва файлу
+
+    const newPath = path.join(avatarPath, filename); // створюємо новий шлях (до public\avatars) з ім'ям файлу
+    //newPath = C:\Users\Olga\Desktop\GitHub\goit-node.js-hw-02-REST-API-app\public\avatars\1691116545855-256001994_drink.jpg
+
+    Jimp.read(oldPath)
+        .then(image => {
+            return image
+            .resize(250, 250) // resize
+            // .resize(Jimp.AUTO, 250)  //ширина відповідно
+            //.resize(250, Jimp.AUTO)   // висота відповідно
+            // .quality(60) // set JPEG quality
+            // .greyscale() // чорно-білий знімок
+            .write(newPath); // зберігає оброблене зображ. за вказаним маршрутом (до public\avatars), але не видаляє з temp оригінальне
+        })
+        .catch(err => {
+            console.error(err);
+        });  
+
+    await fs.rename(oldPath, newPath); // переміщення файла до public\avatars  (переміщення вже було реалізоване в Jimp), + видалення з temp оригінального
+
+    const avatarURL = path.join('avatars', filename); // записуємо шлях в body // папку 'public' не пишемо, вона вже вказана в мідлварі в app.js
+    // avatarURL: avatars\1691116849916-469261661_drink.jpg
+
+    await User.findByIdAndUpdate(_id, {avatarURL}); // знаючи id користувача, можемо перезаписати avatarURL
+
+
+    res.status(201).json({avatarURL}); // успішно додали контакт на сервер
+}
 
 export default { //огортаємо все в try/catch
     register: ctrlWrapper(register),
@@ -86,4 +126,5 @@ export default { //огортаємо все в try/catch
     getCurrent: ctrlWrapper(getCurrent), //тут ми не викидаємо помилку, але для універсальності
     logout: ctrlWrapper(logout),
     updateSubscription: ctrlWrapper(updateSubscription),
+    updateAvatar: ctrlWrapper(updateAvatar),
 }

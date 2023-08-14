@@ -28,6 +28,10 @@ const contactSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  // avatarURL: String,
+  // avatarURL: {  те саме, що і вище
+  //   type: String,
+  // },
   owner: { // той, хто надсилає запити
     type: Schema.Types.ObjectId,  //тут зберігається id, який генерується mongoDB (особливий тип даних)
     ref: 'user', //назва колекції, з якої цей id
