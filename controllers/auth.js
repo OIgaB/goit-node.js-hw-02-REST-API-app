@@ -4,11 +4,12 @@ import gravatar from 'gravatar';
 import fs from 'fs/promises';
 import path from 'path';
 import Jimp from "jimp";  //image processing library for Node.js (resizing, cropping, applying filters...)
+import { nanoid } from 'nanoid';
 import { User } from '../models/user.js';
-import { HttpError } from '../helpers/index.js';
+import { HttpError, sendEmail } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
 
-const { SECRET_KEY } = process.env; // беремо секретний ключ у змінних оточеннях
+const { SECRET_KEY, BASE_URL } = process.env; // беремо секретний ключ у змінних оточеннях
 
 
 const register = async(req, res) => {
@@ -21,8 +22,17 @@ const register = async(req, res) => {
     // 10 - сіль - набір випадкових символів - складність алгоритму генерації солі
     
     const avatarURL = gravatar.url(email); // генеруємо посилання на тимчасову аватарку по email-у користувача
-    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
+    const verificationCode = nanoid();
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationCode }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
+    const verifyEmail = {
+        to: email, // кому буде приходити email на підтвердження (можна використати тимчасову пошту на https://temp-mail.org/uk/)
+        subject: 'Verify email 2',
+        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${verificationCode}">Let's verify your email so you can start login. Click here to verify.</a>`
+    } // при переході за посиланням спрацьовує GET-запит
+// Congratulations! Your sender identity has been successfully verified.
+    await sendEmail(verifyEmail);
+
     res.status(201).json({
         user: {
             email: newUser.email,

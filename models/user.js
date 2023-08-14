@@ -8,7 +8,7 @@ const emailMessage = 'Sorry, the provided email address is not valid. Please ens
 const subscriptionList = ["starter", "pro", "business"];
 
 
-const userSchema = new Schema({
+const userSchema = new Schema({  //mongoose-схема - перевіряє те, що передбачається внести до БД
     email: {
       type: String,
       match: emailRegExp,
@@ -29,7 +29,16 @@ const userSchema = new Schema({
     token: {        // під час логіну користувача будемо записувати токен в БД
       type: String,
       default: ""
-    } 
+    }, 
+    verify: {  // чи підтвердив користувач свій email перед тим як залогінитись
+      type: Boolean,
+      default: false, // після реєстрації, але до логіну - false  
+    },
+    verificationCode: { // або verificationToken - код підтвердження (згенерований nanoid), який приходить в посиланні на пошту
+      type: String,
+      // default: ''
+      required: [true, 'Verify token is required'],
+    }
 }, { versionKey: false, timestamps: true });
 
 userSchema.pre("findOneAndUpdate", validateAtUpdate);
@@ -40,6 +49,10 @@ userSchema.post('findOneAndUpdate', handleMongooseError);
 const registerSchema = Joi.object({
     email: Joi.string().pattern(emailRegExp).message(emailMessage).required(),
     password: Joi.string().min(6).message('Ensure your password contains at least 6 symbols').required(),
+});
+
+const emailSchema = Joi.object({ // коли на пошту приходить лист з проханням підтвердити email
+  email: Joi.string().pattern(emailRegExp).message(emailMessage).required(),
 });
 
 const loginSchema = Joi.object({
@@ -54,6 +67,7 @@ const subscriptionSchema = Joi.object({
 
 export const schemas = {
     registerSchema,
+    emailSchema,
     loginSchema,
     subscriptionSchema,
 };

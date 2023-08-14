@@ -7,6 +7,8 @@ import { authenticate, upload } from '../../middlewares/index.js';
 const router = express.Router();
 
 router.post('/register', validateBody(schemas.registerSchema), authCtrl.register); //signup
+// router.get('/verify/:verificationCode', authCtrl.verifyEmail);
+// router.post('/verify', validateBody(schemas.emailSchema), authCtrl.resendverifyEmail);
 router.post('/login', validateBody(schemas.loginSchema), authCtrl.login); //signin
 
 router.get('/current', authenticate, authCtrl.getCurrent);
