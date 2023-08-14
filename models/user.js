@@ -32,12 +32,12 @@ const userSchema = new Schema({  //mongoose-схема - перевіряє те
     }, 
     verify: {  // чи підтвердив користувач свій email перед тим як залогінитись
       type: Boolean,
-      default: false, // після реєстрації, але до логіну - false  
+      default: false // після реєстрації, але до логіну - false  
     },
-    verificationCode: { // або verificationToken - код підтвердження (згенерований nanoid), який приходить в посиланні на пошту
+    verificationCode: { // або verificationToken - код (згенерований nanoid), що зашитий у лінку, що приходить на пошту для підтвердження email-у
       type: String,
-      // default: ''
-      required: [true, 'Verify token is required'],
+      default: '',
+      required: [true, 'Token verification is required']
     }
 }, { versionKey: false, timestamps: true });
 

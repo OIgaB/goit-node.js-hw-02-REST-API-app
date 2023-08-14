@@ -42,11 +42,51 @@ const register = async(req, res) => {
     })
 };
 
+// Зміна статусу email-у на "верифікований" та очищення верифікаційного коду в БД після підтвердження пошти в отриманому листі
+const verifyEmail = async(req, res) => {
+    const { verificationCode } = req.params;
+    const user = await User.findOne({verificationCode}); // перевіряємо чи є в БД користувач з таким кодом
+    if(!user) {
+        throw HttpError(401, 'Email is not found')
+    }
+    await User.findByIdAndUpdate(user._id, {verify: true, verificationCode: ''}); // якщо є такий користувач, то вносимо зміни до БД
+    
+    console.log('user:', user);
+
+    res.json({
+        message: "The email is successfully verified."
+    })
+};
+
+const resendVerifyEmail = async(req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({email});
+    if(!user){
+        throw HttpError(401, 'Email is not found');
+    }
+    if(user.verify) { //якщо користувач не підтвердив email (user.verify = false)
+        throw HttpError(401, 'The email is already verified')
+    }
+    const verifyEmail = {
+        to: email,
+        subject: 'Verify email',
+        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${user.verificationCode}">Let's verify your email so you can start login. Click here to verify.</a>`,
+    };
+    await sendEmail(verifyEmail);
+
+    res.json({
+        message: 'Verification email is resent.'
+    })
+}
+
 const login = async(req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({email});
     if(!user) {
         throw HttpError(401, 'Email or password invalid'); //більш безпечний варіант писати ...або..., а не один email
+    }
+    if(!user.verify) { //якщо користувач не підтвердив email (user.verify = false)
+        throw HttpError(401, 'Email not verified')
     }
     const passwordCompare = await bcrypt.compare(password, user.password); //порівнюємо введений пароль з тим, що є в БД (true/false)
     if(!passwordCompare) { //якщо false
@@ -132,6 +172,8 @@ const updateAvatar = async(req, res) => {
 
 export default { //огортаємо все в try/catch
     register: ctrlWrapper(register),
+    verifyEmail: ctrlWrapper(verifyEmail),
+    resendVerifyEmail: ctrlWrapper(resendVerifyEmail),
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent), //тут ми не викидаємо помилку, але для універсальності
     logout: ctrlWrapper(logout),
