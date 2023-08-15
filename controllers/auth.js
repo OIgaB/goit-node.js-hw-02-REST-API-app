@@ -22,15 +22,15 @@ const register = async(req, res) => {
     // 10 - сіль - набір випадкових символів - складність алгоритму генерації солі
     
     const avatarURL = gravatar.url(email); // генеруємо посилання на тимчасову аватарку по email-у користувача
-    const verificationCode = nanoid();
-    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationCode }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
+    const verificationToken = nanoid();
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationToken }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
     const verifyEmail = {
         to: email, // кому буде приходити email на підтвердження (можна використати тимчасову пошту на https://temp-mail.org/uk/)
-        subject: 'Verify email 2',
-        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${verificationCode}">Let's verify your email so you can start login. Click here to verify.</a>`
+        subject: 'Verify email 7',
+        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${verificationToken}">Let's verify your email so you can start login. Click here to verify.</a>`
     } // при переході за посиланням спрацьовує GET-запит
-// Congratulations! Your sender identity has been successfully verified.
+
     await sendEmail(verifyEmail);
 
     res.status(201).json({
@@ -44,38 +44,36 @@ const register = async(req, res) => {
 
 // Зміна статусу email-у на "верифікований" та очищення верифікаційного коду в БД після підтвердження пошти в отриманому листі
 const verifyEmail = async(req, res) => {
-    const { verificationCode } = req.params;
-    const user = await User.findOne({verificationCode}); // перевіряємо чи є в БД користувач з таким кодом
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken }); // перевіряємо чи є в БД користувач з таким кодом
     if(!user) {
         throw HttpError(401, 'Email is not found')
     }
-    await User.findByIdAndUpdate(user._id, {verify: true, verificationCode: ''}); // якщо є такий користувач, то вносимо зміни до БД
-    
-    console.log('user:', user);
+    await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: "" }); // якщо є такий користувач, то вносимо зміни до БД
 
     res.json({
-        message: "The email is successfully verified."
+        message: "Congratulations! The email has been successfully verified."
     })
 };
 
 const resendVerifyEmail = async(req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if(!user){
         throw HttpError(401, 'Email is not found');
     }
-    if(user.verify) { //якщо користувач не підтвердив email (user.verify = false)
-        throw HttpError(401, 'The email is already verified')
+    if(user.verify) { //якщо користувач вже підтвердив email (user.verify = true)
+        throw HttpError(401, 'The email is already verified')   // не спрацює, бо спочатку Postman видасть "Email already in use"
     }
     const verifyEmail = {
         to: email,
         subject: 'Verify email',
-        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${user.verificationCode}">Let's verify your email so you can start login. Click here to verify.</a>`,
+        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${user.verificationToken}">Let's verify your email so you can start login. Click here to verify.</a>`,
     };
-    await sendEmail(verifyEmail);
+    await sendEmail(verifyEmail); //якщо користувач ще не підтвердив email
 
     res.json({
-        message: 'Verification email is resent.'
+        message: 'Congratulations! The email has been successfully verified.'
     })
 }
 

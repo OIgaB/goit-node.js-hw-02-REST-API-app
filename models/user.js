@@ -34,10 +34,10 @@ const userSchema = new Schema({  //mongoose-схема - перевіряє те
       type: Boolean,
       default: false // після реєстрації, але до логіну - false  
     },
-    verificationCode: { // або verificationToken - код (згенерований nanoid), що зашитий у лінку, що приходить на пошту для підтвердження email-у
+    verificationToken: { // або verificationCode - код (згенерований nanoid), що зашитий у лінку, що приходить на пошту для підтвердження email-у
       type: String,
       default: '',
-      required: [true, 'Token verification is required']
+      // required: [true, 'Token verification is required']  // не працює
     }
 }, { versionKey: false, timestamps: true });
 
