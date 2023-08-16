@@ -27,7 +27,7 @@ const register = async(req, res) => {
     
     const verifyEmail = {
         to: email, // кому буде приходити email на підтвердження (можна використати тимчасову пошту на https://temp-mail.org/uk/)
-        subject: 'Verify email 7',
+        subject: 'Please confirm your email address',
         html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${verificationToken}">Let's verify your email so you can start login. Click here to verify.</a>`
     } // при переході за посиланням спрацьовує GET-запит
 
@@ -67,7 +67,7 @@ const resendVerifyEmail = async(req, res) => {
     }
     const verifyEmail = {
         to: email,
-        subject: 'Verify email',
+        subject: 'Please confirm your email address',
         html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${user.verificationToken}">Let's verify your email so you can start login. Click here to verify.</a>`,
     };
     await sendEmail(verifyEmail); //якщо користувач ще не підтвердив email
