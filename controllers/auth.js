@@ -4,11 +4,12 @@ import gravatar from 'gravatar';
 import fs from 'fs/promises';
 import path from 'path';
 import Jimp from "jimp";  //image processing library for Node.js (resizing, cropping, applying filters...)
+import { nanoid } from 'nanoid';
 import { User } from '../models/user.js';
-import { HttpError } from '../helpers/index.js';
+import { HttpError, sendEmail, createVerificationEmail } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
 
-const { SECRET_KEY } = process.env; // беремо секретний ключ у змінних оточеннях
+const { SECRET_KEY, BASE_URL } = process.env; // беремо секретний ключ у змінних оточеннях
 
 
 const register = async(req, res) => {
@@ -21,8 +22,13 @@ const register = async(req, res) => {
     // 10 - сіль - набір випадкових символів - складність алгоритму генерації солі
     
     const avatarURL = gravatar.url(email); // генеруємо посилання на тимчасову аватарку по email-у користувача
-    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
+    const verificationToken = nanoid();
+    const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationToken }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
+    const verifyEmail = createVerificationEmail(email, verificationToken); // повертається об'єкт листа
+
+    await sendEmail(verifyEmail);
+
     res.status(201).json({
         user: {
             email: newUser.email,
@@ -32,11 +38,47 @@ const register = async(req, res) => {
     })
 };
 
+// Зміна статусу email-у на "верифікований" та очищення верифікаційного коду в БД після підтвердження пошти в отриманому листі
+const verifyEmail = async(req, res) => {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken }); // перевіряємо чи є в БД користувач з таким кодом
+    if(!user) {
+        throw HttpError(401, 'Email is not found')
+    }
+    await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: "" }); // якщо є такий користувач, то вносимо зміни до БД
+
+    res.json({
+        message: "Congratulations! The email has been successfully verified."
+    })
+};
+
+const resendVerifyEmail = async(req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if(!user){
+        throw HttpError(401, 'Email is not found');
+    }
+    if(user.verify) { //якщо користувач вже підтвердив email (user.verify = true)
+        throw HttpError(401, 'The email is already verified')   // не спрацює, бо спочатку Postman видасть "Email already in use"
+    }
+
+    const verifyEmail = createVerificationEmail(email, user.verificationToken); // повертається об'єкт листа
+
+    await sendEmail(verifyEmail); //якщо користувач ще не підтвердив email
+
+    res.json({
+        message: 'Congratulations! The email has been successfully verified.'
+    })
+}
+
 const login = async(req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({email});
     if(!user) {
         throw HttpError(401, 'Email or password invalid'); //більш безпечний варіант писати ...або..., а не один email
+    }
+    if(!user.verify) { //якщо користувач не підтвердив email (user.verify = false)
+        throw HttpError(401, 'Email not verified')
     }
     const passwordCompare = await bcrypt.compare(password, user.password); //порівнюємо введений пароль з тим, що є в БД (true/false)
     if(!passwordCompare) { //якщо false
@@ -122,6 +164,8 @@ const updateAvatar = async(req, res) => {
 
 export default { //огортаємо все в try/catch
     register: ctrlWrapper(register),
+    verifyEmail: ctrlWrapper(verifyEmail),
+    resendVerifyEmail: ctrlWrapper(resendVerifyEmail),
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent), //тут ми не викидаємо помилку, але для універсальності
     logout: ctrlWrapper(logout),
