@@ -6,7 +6,7 @@ import path from 'path';
 import Jimp from "jimp";  //image processing library for Node.js (resizing, cropping, applying filters...)
 import { nanoid } from 'nanoid';
 import { User } from '../models/user.js';
-import { HttpError, sendEmail } from '../helpers/index.js';
+import { HttpError, sendEmail, createVerificationEmail } from '../helpers/index.js';
 import { ctrlWrapper } from '../decorators/index.js';
 
 const { SECRET_KEY, BASE_URL } = process.env; // беремо секретний ключ у змінних оточеннях
@@ -25,11 +25,7 @@ const register = async(req, res) => {
     const verificationToken = nanoid();
     const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationToken }) // в БД зберігаємо пароль у захешованому вигляді (post-запит)
     
-    const verifyEmail = {
-        to: email, // кому буде приходити email на підтвердження (можна використати тимчасову пошту на https://temp-mail.org/uk/)
-        subject: 'Please confirm your email address',
-        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${verificationToken}">Let's verify your email so you can start login. Click here to verify.</a>`
-    } // при переході за посиланням спрацьовує GET-запит
+    const verifyEmail = createVerificationEmail(email, verificationToken); // повертається об'єкт листа
 
     await sendEmail(verifyEmail);
 
@@ -65,11 +61,9 @@ const resendVerifyEmail = async(req, res) => {
     if(user.verify) { //якщо користувач вже підтвердив email (user.verify = true)
         throw HttpError(401, 'The email is already verified')   // не спрацює, бо спочатку Postman видасть "Email already in use"
     }
-    const verifyEmail = {
-        to: email,
-        subject: 'Please confirm your email address',
-        html: `<a target='_blank' href="${BASE_URL}/api/auth/verify/${user.verificationToken}">Let's verify your email so you can start login. Click here to verify.</a>`,
-    };
+
+    const verifyEmail = createVerificationEmail(email, user.verificationToken); // повертається об'єкт листа
+
     await sendEmail(verifyEmail); //якщо користувач ще не підтвердив email
 
     res.json({
